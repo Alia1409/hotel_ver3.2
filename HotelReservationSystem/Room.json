@@ -1,0 +1,18 @@
+[
+  {
+    "roomNumber": "101",
+    "type": "single",
+    "floor": 1,
+    "pricePerNight": 85.00,
+    "status": "available",
+    "description": "City View"
+  },
+  {
+    "roomNumber": "202",
+    "type": "double",
+    "floor": 2,
+    "pricePerNight": 120.00,
+    "status": "available",
+    "description": "Pool View"
+  }
+]

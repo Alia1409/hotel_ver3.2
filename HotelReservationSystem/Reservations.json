@@ -1,0 +1,13 @@
+[
+  {
+    "id": "RES-001",
+    "roomNumber": "101",
+    "guestName": "Alice",
+    "email": "alice@g.com",
+    "phone": "1234567",
+    "checkInDate": "2026-06-03",
+    "checkOutDate": "2026-06-12",
+    "status": "confirmed",
+    "specialNotes": "will arrive late"
+  }
+]

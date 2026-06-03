@@ -1,0 +1,2 @@
+101|single|1|85.00|available|City View
+202|double|2|120.00|available|Pool View

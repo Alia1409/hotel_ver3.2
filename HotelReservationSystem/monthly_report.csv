@@ -1,0 +1,2 @@
+ID,RoomNumber,Guest,CheckIn,CheckOut,Nights,TotalAmount,Status,Special Notes
+RES-001,101,Alice Liddell,2026-06-01,2026-06-02,1,80.00,confirmed,baby bed
