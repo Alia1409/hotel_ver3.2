@@ -1,0 +1,2 @@
+RES-001|101|Alice Liddell|Aliace@gmail.com|1234567|2026-06-03|2026-06-10|completed|will arrive late
+RES-002|102|hzsjq|dhuidhi@gzj.com|123456788|2026-06-03|2026-06-11|confirmed|

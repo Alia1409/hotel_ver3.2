@@ -1,0 +1,3 @@
+ID,RoomNumber,Guest,CheckIn,CheckOut,Nights,TotalAmount,Status,Special Notes
+RES-001,101,Alice Liddell,2026-06-03,2026-06-10,7,595.00,completed,will arrive late
+RES-002,102,hzsjq,2026-06-03,2026-06-11,8,688.00,confirmed,

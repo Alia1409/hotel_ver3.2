@@ -1,0 +1,24 @@
+[
+  {
+    "id": "RES-001",
+    "roomNumber": "101",
+    "guestName": "Alice Liddell",
+    "email": "Aliace@gmail.com",
+    "phone": "1234567",
+    "checkInDate": "2026-06-03",
+    "checkOutDate": "2026-06-10",
+    "status": "completed",
+    "specialNotes": "will arrive late"
+  },
+  {
+    "id": "RES-002",
+    "roomNumber": "102",
+    "guestName": "hzsjq",
+    "email": "dhuidhi@gzj.com",
+    "phone": "123456788",
+    "checkInDate": "2026-06-03",
+    "checkOutDate": "2026-06-11",
+    "status": "confirmed",
+    "specialNotes": ""
+  }
+]
