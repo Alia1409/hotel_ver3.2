@@ -23,15 +23,21 @@ public class ReservationService {
     }
 
     public boolean createReservation(Reservation r) {
+        // 1. Check if the room is actually available for these dates
+        if (!isRoomAvailable(r.getRoomNumber(), r.getCheckInDate(), r.getCheckOutDate())) {
+            return false; // Reject the booking!
+        }
         
         reservations.add(r);
-
         storageManager.saveReservations(reservations); 
         return true;
     }
 
     public boolean updateReservation(Reservation r) {
-
+        // 1. Check if the room is available (excluding this specific reservation ID)
+        if (!isRoomAvailableForUpdate(r.getId(), r.getRoomNumber(), r.getCheckInDate(), r.getCheckOutDate())) {
+            return false; // Reject the update!
+        }
 
         for (int i = 0; i < reservations.size(); i++) {
             if (reservations.get(i).getId().equals(r.getId())) {
@@ -39,18 +45,16 @@ public class ReservationService {
                 break;
             }
         }
-
         storageManager.saveReservations(reservations); 
         return true;
     }
 
     public void deleteReservation(String id) {
         reservations.removeIf(r -> r.getId().equals(id));
-
         storageManager.saveReservations(reservations); 
     }
-    public void processCheckIn(String id) {
 
+    public void processCheckIn(String id) {
         Reservation res = reservations.stream()
                 .filter(r -> r.getId().equals(id))
                 .findFirst()
@@ -58,7 +62,6 @@ public class ReservationService {
 
         if (res != null) {
             res.setStatus("in-progress");
-
             Room room = roomService.getRoomByNumber(res.getRoomNumber());
             if (room != null) {
                 room.setStatus("occupied");
@@ -76,7 +79,6 @@ public class ReservationService {
 
         if (res != null) {
             res.setStatus("completed");
-
             Room room = roomService.getRoomByNumber(res.getRoomNumber());
             if (room != null) {
                 room.setStatus("available");
@@ -85,21 +87,39 @@ public class ReservationService {
             storageManager.saveReservations(reservations);
         }
     }
+
     public boolean isRoomAvailable(String roomNumber, LocalDate checkIn, LocalDate checkOut) {
         for (Reservation res : reservations) {
-            // Skip reservations that are already cancelled or completed
+            // Skip cancelled or completed bookings
             if (res.getStatus().equalsIgnoreCase("cancelled") || res.getStatus().equalsIgnoreCase("completed")) {
                 continue;
             }
             
-            // Check if the reservation matches the target room number
+            // If it matches the same room, verify the date boundaries don't overlap
             if (res.getRoomNumber().equals(roomNumber)) {
-                // Booking overlap conflict logic
                 if (checkIn.isBefore(res.getCheckOutDate()) && checkOut.isAfter(res.getCheckInDate())) {
-                    return false; // The room is taken during these dates!
+                    return false; // Overlap detected!
                 }
             }
         }
-        return true; // No overlaps found, the room is free!
-    }    
+        return true; // Safe to book
+    }
+
+    // Helper method to allow updating a reservation without it conflicting with its own old dates
+    private boolean isRoomAvailableForUpdate(String currentResId, String roomNumber, LocalDate checkIn, LocalDate checkOut) {
+        for (Reservation res : reservations) {
+            if (res.getId().equals(currentResId)) {
+                continue; // Ignore checking against itself
+            }
+            if (res.getStatus().equalsIgnoreCase("cancelled") || res.getStatus().equalsIgnoreCase("completed")) {
+                continue;
+            }
+            if (res.getRoomNumber().equals(roomNumber)) {
+                if (checkIn.isBefore(res.getCheckOutDate()) && checkOut.isAfter(res.getCheckInDate())) {
+                    return false; 
+                }
+            }
+        }
+        return true;
+    }
 }
