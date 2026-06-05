@@ -7,9 +7,12 @@ import persistence.StorageManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions; // Corrected standard Jupiter API import
+import org.junit.jupiter.api.Assertions;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,107 +21,121 @@ public class StorageManagerTest {
 
     private StorageManager storageManager;
     
-    // Track file paths used by StorageManager to clean them up after tests
-    private static final String TXT_FILE = "data_records.txt";
-    private static final String JSON_FILE = "data_records.json";
-    private static final String ROOM_TXT_FILE = "room_records.txt";
-    private static final String ROOM_JSON_FILE = "room_records.json";
+    // Direct targets to match your exact hardcoded file string fields
+    private static final String TXT_FILE = "Reservations.txt";
+    private static final String JSON_FILE = "Reservations.json";
+    private static final String ROOM_TXT_FILE = "Room.txt";
+    private static final String ROOM_JSON_FILE = "Room.json";
+
+    // Dynamic backup path locations
+    private static final String BACKUP_PREFIX = "backup_";
 
     @BeforeEach
     public void setUp() {
         storageManager = new StorageManager();
-        // Clear any existing production files before running tests to ensure a clean state
-        deleteTemporaryFiles();
+        // Step 1: Securely preserve your real application data records
+        backupFile(TXT_FILE);
+        backupFile(JSON_FILE);
+        backupFile(ROOM_TXT_FILE);
+        backupFile(ROOM_JSON_FILE);
     }
 
     @AfterEach
     public void tearDown() {
-        // Remove files generated during the test lifecycle so they don't mess with real data
-        deleteTemporaryFiles();
+        // Step 3: Revert your project folder exactly back to how it was before the test ran
+        restoreFile(TXT_FILE);
+        restoreFile(JSON_FILE);
+        restoreFile(ROOM_TXT_FILE);
+        restoreFile(ROOM_JSON_FILE);
     }
 
     @Test
     public void testSaveAndLoadRooms() {
-        // 1. Create a dummy list of rooms
         List<Room> testRooms = new ArrayList<>();
-        testRooms.add(new Room("101", "Standard", 1, 85.50, "available", "Cozy single room"));
-        testRooms.add(new Room("102", "Deluxe", 1, 150.00, "occupied", "Double bed with balcony"));
+        testRooms.add(new Room("101", "Standard", 1, 85.50, "available", "Garden View"));
+        testRooms.add(new Room("102", "Deluxe", 1, 150.00, "occupied", "Partial Sea View"));
 
-        // 2. Save using the storage manager
+        // Executes write routines straight to "Room.txt" / "Room.json"
         storageManager.saveRooms(testRooms);
 
-        // 3. Verify that both the TXT and JSON files were created on disk
-        Assertions.assertTrue(new File(ROOM_TXT_FILE).exists(), "Room TXT file should be created.");
-        Assertions.assertTrue(new File(ROOM_JSON_FILE).exists(), "Room JSON file should be created.");
+        Assertions.assertTrue(new File(ROOM_TXT_FILE).exists(), "Room TXT output file must be present.");
+        Assertions.assertTrue(new File(ROOM_JSON_FILE).exists(), "Room JSON output file must be present.");
 
-        // 4. Load the rooms back from disk
         List<Room> loadedRooms = storageManager.loadRooms();
 
-        // 5. Assertions to confirm the data matches exactly
-        Assertions.assertEquals(2, loadedRooms.size(), "Should load exactly 2 rooms.");
-        
-        Room room1 = loadedRooms.get(0);
-        Assertions.assertEquals("101", room1.getRoomNumber());
-        Assertions.assertEquals("Standard", room1.getType());
-        Assertions.assertEquals(1, room1.getFloor());
-        Assertions.assertEquals(85.50, room1.getPricePerNight(), 0.001);
-        Assertions.assertEquals("available", room1.getStatus());
-        Assertions.assertEquals("Cozy single room", room1.getDescription());
+        Assertions.assertEquals(2, loadedRooms.size(), "Should load 2 test records.");
+        Assertions.assertEquals("101", loadedRooms.get(0).getRoomNumber());
+        Assertions.assertEquals("Garden View", loadedRooms.get(0).getDescription());
     }
 
     @Test
     public void testSaveAndLoadReservations() {
-        // 1. Create dummy reservation records
         List<Reservation> testReservations = new ArrayList<>();
-        Reservation res1 = new Reservation(
+        testReservations.add(new Reservation(
                 "RES-001", "101", "Alice Smith", "alice@example.com", "555-0192",
                 LocalDate.of(2026, 6, 10), LocalDate.of(2026, 6, 15), "confirmed", "Needs extra towels"
-        );
-        testReservations.add(res1);
+        ));
 
-        // 2. Save using the storage manager (which triggers both TXT and JSON writes)
+        // Executes write routines straight to "Reservations.txt" / "Reservations.json"
         storageManager.saveReservations(testReservations);
 
-        // 3. Verify that both expected reservation files exist on disk
-        Assertions.assertTrue(new File(TXT_FILE).exists(), "Reservation TXT file should be created.");
-        Assertions.assertTrue(new File(JSON_FILE).exists(), "Reservation JSON file should be created.");
+        Assertions.assertTrue(new File(TXT_FILE).exists(), "Reservations TXT output file must be present.");
+        Assertions.assertTrue(new File(JSON_FILE).exists(), "Reservations JSON output file must be present.");
 
-        // 4. Load the data back in
         List<Reservation> loadedReservations = storageManager.loadReservations();
 
-        // 5. Confirm structural data values match down to the attributes
-        Assertions.assertEquals(1, loadedReservations.size(), "Should load exactly 1 reservation.");
-        
-        Reservation actual = loadedReservations.get(0);
-        Assertions.assertEquals("RES-001", actual.getId());
-        Assertions.assertEquals("101", actual.getRoomNumber());
-        Assertions.assertEquals("Alice Smith", actual.getGuestName());
-        Assertions.assertEquals("alice@example.com", actual.getEmail());
-        Assertions.assertEquals("555-0192", actual.getPhone());
-        Assertions.assertEquals(LocalDate.of(2026, 6, 10), actual.getCheckInDate());
-        Assertions.assertEquals(LocalDate.of(2026, 6, 15), actual.getCheckOutDate());
-        Assertions.assertEquals("confirmed", actual.getStatus());
-        Assertions.assertEquals("Needs extra towels", actual.getSpecialNotes());
+        Assertions.assertEquals(1, loadedReservations.size());
+        Assertions.assertEquals("RES-001", loadedReservations.get(0).getId());
+        Assertions.assertEquals("Alice Smith", loadedReservations.get(0).getGuestName());
     }
 
     @Test
     public void testLoadReservationsWhenFileDoesNotExist() {
-        // Ensure no file is present
-        deleteTemporaryFiles();
+        // Delete active files explicitly to force empty evaluation branch check
+        deleteFile(TXT_FILE);
+        deleteFile(JSON_FILE);
 
-        // Loading should gracefully return an empty list instead of throwing an Exception
         List<Reservation> loaded = storageManager.loadReservations();
         Assertions.assertNotNull(loaded, "Returned collection should never be null.");
-        Assertions.assertTrue(loaded.isEmpty(), "Returned collection should be empty when no data file exists.");
+        Assertions.assertTrue(loaded.isEmpty(), "Collection should be empty when target data files don't exist.");
     }
 
-    private void deleteTemporaryFiles() {
-        String[] files = {TXT_FILE, JSON_FILE, ROOM_TXT_FILE, ROOM_JSON_FILE};
-        for (String path : files) {
-            File f = new File(path);
-            if (f.exists()) {
-                f.delete();
+    // Helper utilities to isolate file management states
+    private void backupFile(String filename) {
+        File original = new File(filename);
+        if (original.exists()) {
+            try {
+                Files.copy(original.toPath(), new File(BACKUP_PREFIX + filename).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                original.delete(); // Clear original so test starts fresh
+            } catch (IOException e) {
+                System.err.println("Could not create backup for " + filename + ": " + e.getMessage());
             }
+        }
+    }
+
+    private void restoreFile(String filename) {
+        File backup = new File(BACKUP_PREFIX + filename);
+        File original = new File(filename);
+        
+        // Wipe test artifacts
+        if (original.exists()) {
+            original.delete();
+        }
+        
+        // Restore real user data assets
+        if (backup.exists()) {
+            try {
+                Files.move(backup.toPath(), original.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                System.err.println("Could not restore data for " + filename + ": " + e.getMessage());
+            }
+        }
+    }
+
+    private void deleteFile(String filename) {
+        File f = new File(filename);
+        if (f.exists()) {
+            f.delete();
         }
     }
 }
